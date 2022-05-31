@@ -1,13 +1,12 @@
-// Define basePath to elasticsearch and index
-var basePath = 'https://search-barmcqs-6nyamzhjxo5e6uovvd3atz3ymy.us-east-1.es.amazonaws.com';
-var index = 'myindex'
+
+var basePath = 'https://elodocuments.es.us-central1.gcp.cloud.es.io:9243';
+var index = 'dumpdata'
+
 
 var myHeaders = new Headers();
-myHeaders.append("Authorization", "Basic aGFzc2FuOkF3c3R0cy4x");
+myHeaders.append("Authorization", "Basic ZWxhc3RpYzpOQjM5aGxLWnRwdk52cmZVTE1VZ0U2Tzg=");
 myHeaders.append("Content-Type", "application/json");
 
-console.log(myHeaders);
-  
 
 String.prototype.format = function () {
   // store arguments in an array
@@ -20,6 +19,7 @@ String.prototype.format = function () {
     return typeof args[index] == 'undefined' ? match : args[index];
   });
 };
+
 var loadingdiv = $('#loading');
 var noresults = $('#noresults');
 var resultdiv = $('#results');
@@ -39,7 +39,7 @@ var makeQuerybody = function (query) {
 
   if (query.includes("=")){
       query = query.replace('=','');
-      qBody = '{"size":25,"query":{    "bool": {"must": [{"match_phrase": {"document": "{0}" }}]} }}'.format(query)
+      qBody = '{"size":25,"query":{    "bool": {"must": [{"match_phrase": {"Text": "{0}" }}]} }}'.format(query)
       return qBody
   }
   else{
@@ -85,10 +85,7 @@ var applyFilters = function (qBody,filter_body) {
 var getResponse = function (query) {
   
   var url = basePath + '/' + index + '/' + '_search';
-  console.log("NAAAAAAAAAAAAAAAAAAAAa")
-  
   if (query.includes("[") && query.includes("]")) {
-    console.log("MAAAAAAAAAAAAAAAAAAAAa")
     vals = clean_query(query)
     remaining_query = vals.cleaned_query 
     filter_body = vals.filter_text
@@ -101,13 +98,6 @@ var getResponse = function (query) {
     final_body = makeQuerybody(query);
   }
   console.log("This is query",final_body);
-  console.log(myHeaders);
- 
-  let req = new Request(url, {
-    mode: 'cors',
-    credentials: 'include',
-  });
-
   return fetch(url, {
       method: 'POST',
       headers:myHeaders,
@@ -173,14 +163,11 @@ async function search() {
   loadingdiv.show();
   // Get the query from the user
   let query = searchbox.val();
-  console.log("KKKKKKKKKKKKKK")
   // Only run a query if the string contains at least three characters
   if (query.length > 2) {
-    console.log("KKKKKKKKKKKdsdsdKKK")
     // Make the HTTP request with the query as a parameter and wait for the JSON results
     let response = await getResponse(query)
     // Get the part of the JSON response that we care about
-    console.log("KzzzzzzKKKKKKKKKKKKK")
     let results = await response['hits']['hits'];
     if (results.length > 0) {
       loadingdiv.hide();
@@ -192,8 +179,6 @@ async function search() {
       var array = gatherAllwords(temp,query);
 
       var i= 1
-      console.log("HERE ARE");
-      
       console.log(results);
       for (var item in results) {
 
@@ -202,8 +187,7 @@ async function search() {
         text = highlihting(array,uh_text)
         let path = results[item]._source.Destination
         resultdiv.append(" <Strong> <u><p> Match " + i + " : </p</u> </Strong>") 
-        resultdiv.append('<p style="color: #000000">  <u>File path : </u>&emsp;</br>' + path+ '</p> ');
-        resultdiv.append(" <Strong> <u><p> Text " + " : </p</u> </Strong>");  
+        resultdiv.append('<span style="color: #008000">  File path :' + path+ '</span> ');
         resultdiv.append('<div class="result">' + text+ '</p></div></div>');
         resultdiv.append('===============================================');
         i+=1
@@ -220,5 +204,3 @@ async function search() {
 function imageError(image) {
   image.src = 'images/no-image.png';
 }
-
-
